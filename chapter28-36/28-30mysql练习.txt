@@ -1,0 +1,169 @@
+/*
+* 28 MYSQL-条件查询介绍 
+* 语法:
+* SELECT 查询列名 FROM 表名 WHERE 筛选条件
+* 分类:
+*.  一、按条件表达式筛选 
+*  条件运算符: ><= != <> >= <=
+*  二、按逻辑运算符筛选
+*。 逻辑运算符: && || ! and or NOT
+*. 
+* &&和and：两个条件为true,结果为true,反之为false
+* ||或or: 只要有一个条件为true,结果为true,反之为false
+* !或not: 如果连接的条件本身为false,解惑为true,反之为false 
+* 三、模糊查询 
+*. like
+*.  BETWEEN
+*  is null
+*. in
+*/
+
+#MYSQL基础_条件运算符的作用
+#案例: 查询工资>12000元员工信息
+SELECT * FROM employees WHERE salary > 12000;
+
+#案例: 查询部分编号不等于90的员工编号和部门编号
+SELECT employee_id 员工编号,department_id 部门编号 FROM employees
+WHERE department_id!=90;
+
+SELECT employee_id 员工编号,department_id 部门编号 FROM employees
+WHERE department_id<>90;
+
+#MYSQL基础_逻辑运算符使用
+#逻辑运算符的筛选
+#案例1 查询工资在10000到20000之间的员工名、工资以及奖金
+SELECT IFNULL(commission_pct,0) AS "奖金率",commission_pct FROM employees;
+SELECT last_name,salary,IFNULL(commission_pct,0) AS "奖金率" FROM employees
+WHERE salary>=10000 AND salary<=20000
+
+#案例2: 查询部门编号不是在90到110之间,或者工资高于15000员工信息 
+SELECT * FROM employees WHERE department_id >=90 AND department_id<=110 OR salary>15000 
+SELECT * FROM employees WHERE NOT(department_id >=90 AND department_id<=110) OR salary>15000 
+
+
+/*
+*   p31 MySQL基础_基础查询_like关键字
+#   like  特点：1⃣️ 一般和通配符搭配使用 %任意多个字符,包含0个字符
+*   between and 1⃣️使用between and 可以提高代码整洁 2⃣️包含临界值 3⃣️两个临界值顺序不要调换
+*   in
+*   is null | is not null
+*
+*/
+
+#查询员工中包含字符a的员工信息
+SELECT * FROM employees WHERE last_name LIKE '%a%';
+
+#查询员工名中第三个字符为n,第五个字符为l员工名和工资
+SELECT last_name,salary FROM employees WHERE last_name LIKE '__n_l%';
+
+# 查询员工名第二个字符_员工名
+SELECT last_name FROM employees WHERE last_name LIKE '_\_';
+SELECT last_name FROM employees WHERE last_name LIKE '_$_' ESCAPE '$';
+
+
+
+/*
+*   p32 MySQL基础_模糊查询 between...and
+#   1⃣️使用between and 可以提高代码的整洁度  
+*   2⃣️包括临界值
+*   3⃣️两个临界值顺序不要调换
+*   
+*/
+
+
+#查询员工编号在100到120之间的员工信息
+SELECT * FROM employees WHERE employee_id BETWEEN 100 AND 120;
+
+/*
+*   p33 MySQL基础_in关键字
+#   含义:判断 某字段得到值睡否属于in列表中的某一项
+#   特点： 
+*   1⃣使用in提高代码整洁度
+*   2⃣️in列表中的值统一类型
+*   
+*/
+
+#查询员工的工种编号 IT_PROG,AD_VP,AC_MGR中的一个员工名和工种编号
+SELECT last_name,job_id FROM employees WHERE job_id IN('IT_PROG','AD_VP','AC_MGR');
+
+/*
+*    34 MySQL基础_模糊查询 is null
+#  =不能判断null值
+#  分析
+#  =或<>不能用于判断null值is null或is not null可以判断null值
+*    
+*/
+
+
+# 案例1: 查询没有奖金的员工名和奖金率
+SELECT last_name,commission_pct FROM employees WHERE commission_pct is NULL;
+
+
+# 案例2: 查询有奖金的员工名和奖金率
+SELECT last_name,commission_pct FROM employees WHERE commission_pct is NOT NULL;
+
+
+#35 安全等于<=>不仅可以判断NULL值,可读性较高,建议使用,即可以判断NULL值,又可以判断普通的数值,可读性降低
+
+#查询工资为12000的员工信息
+SELECT last_name,salary FROM employees WHERE salary <=> 12000;
+
+#36 条件查询
+# 查询员工号为176员工姓名和部门号和年薪
+SELECT last_name,department_id,salary*12*(1+IFNULL(commission_pct,0)) AS '年薪' FROM employees WHERE employee_id = 176;
+
+
+/*
+* 测试题
+*  1.查询工资大于 12000 的员工姓名和工资
+*  2.查询员工号为 176 的员工的姓名和部门号和年薪
+*  3.选择工资不在 5000 到 12000 的员工的姓名和工资
+*  4.选择在 20 或 50 号部门工作的员工姓名和部门号
+*  5.选择公司中没有管理者的员工姓名及 job_id
+*  6.选择公司中有奖金的员工姓名，工资和奖金级别
+*  7.选择员工姓名的第三个字母是 a 的员工姓名
+*  8.选择姓名中有字母 a 和 e 的员工姓名
+*  9.显示出表 employees 表中 first_name 以 'e'结尾的员工信息
+*  10.显示出表 employees 部门编号在 80-100 之间 的姓名、职位  
+*  11.显示出表 employees 的 manager_id 是 100,101,110 的员工姓名、职位
+*/
+
+/**
+* 测试题  答案如下:
+*/
+
+# 测试 1.查询工资大于 12000 的员工姓名和工资
+SELECT last_name,salary FROM employees WHERE salary > 12000;
+
+#测试 2.查询员工号为 176 的员工的姓名和部门号和年薪
+SELECT last_name,department_id,salary*12*(1+IFNULL(commission_pct,0)) AS '年薪' FROM employees WHERE employee_id = 176;
+
+#测试 3.选择工资不在 5000 到 12000 的员工的姓名和工资
+SELECT last_name,salary FROM employees WHERE NOT(salary>=5000 AND salary<=12000);
+SELECT last_name,salary FROM employees WHERE salary>12000 OR salary <5000;
+
+# 测试 4.选择在 20 或 50 号部门工作的员工姓名和部门号
+SELECT last_name,department_id FROM employees WHERE department_id IN(20,50);
+
+# 测试 5.选择公司中没有管理者的员工姓名及 job_id
+SELECT last_name,job_id FROM employees WHERE manager_id IS NULL;
+
+# 测试 6.选择公司中有奖金的员工姓名，工资和奖金级别
+SELECT last_name,salary,commission_pct  FROM employees WHERE commission_pct IS NOT NULL;
+
+# 测试 7.选择员工姓名的第三个字母是 a 的员工姓名
+SELECT last_name FROM employees WHERE last_name LIKE '__a%';
+
+# 测试 8.选择姓名中有字母 a 和 e 的员工姓名
+SELECT last_name FROM employees WHERE last_name LIKE '%a%' AND last_name LIKE '%e%';
+
+
+
+# 测试 9.显示出表 employees 表中 first_name 以 'e'结尾的员工信息
+SELECT * FROM employees WHERE first_name LIKE '%e';
+
+# 测试 10.显示出表 employees 部门编号在 80-100 之间 的姓名、职位  
+SELECT last_name,job_id FROM employees WHERE department_id BETWEEN 80 AND 100;
+
+# 测试 11.显示出表 employees 的 manager_id 是 100,101,110 的员工姓名、职位
+SELECT last_name,job_id FROM employees WHERE manager_id IN(100,101,110);
