@@ -1,0 +1,411 @@
+/**
+*  p39 MYSQL_排序查询
+*  排序查询 引入
+*  select  查询列表 from 表 where 筛选条件 order by 排列列表[asc|desc]
+*
+*   特点：
+*   1、asc代表的是升序，desc代表的是降序，如果不写
+*   2、order by 子句中开始支持单个字段、多个字段、表达式、函数、别名
+*   3、 order by 子句一般放在查询语句后面,limit子句除外
+*/
+
+
+# 查询员工信息，要求工资从高到低排序
+SELECT * FROM employees ORDER BY salary ASC DESC;
+
+
+/**
+* 40.排序查询表示列
+*/
+
+
+# 查询部门编号>=90员工信息，按入职时间先后
+SELECT * FROM employees WHERE department_id >= 90 ORDER BY hiredate ASC;
+
+# 按年薪的高低显示的信息和年薪按表达式排序
+SELECT salary*12*IFNULL(commission_pct,0) AS "年薪" FROM employees ORDER BY salary*12*IFNULL(commission_pct,0) DESC ;
+
+# 按姓名的长度显示员工的姓名和工资【按函数排序】
+SELECT LENGTH(last_name) "姓名长度",last_name,salary FROM employees ORDER BY LENGTH(last_name) DESC;
+
+# 查询员工信息,要求先按工资升序,再按员工编号降序
+SELECT salary "工资",employee_id "员工编号" FROM employees ORDER BY salary ASC,employee_id DESC;
+
+
+/**
+* 42.测试题
+*/
+
+#1. 查询员工的姓名和部门号和年薪，按年薪降序 按姓名升序
+SELECT last_name "姓名",department_id "部门号",salary*12*IFNULL(commission_pct,0) "年薪" FROM employees ORDER BY last_name ASC;
+
+
+#2. 选择工资不在 8000 到 17000 的员工的姓名和工资，按工资降序
+SELECT last_name "姓名",salary "工资" FROM employees WHERE salary NOT BETWEEN 8000 AND 170000 ORDER BY salary ASC;
+
+
+#3. 查询邮箱中包含 e 的员工信息，并先按邮箱的字节数降序，再按部门号升序
+SELECT LENGTH(email) "邮箱的字节数",department_id "部门号" FROM employees WHERE email LIKE "%e%" ORDER BY  LENGTH(email) DESC,department_id ASC;
+
+
+
+/**
+*  p43 MYSQL基础-常见函数介绍
+*  功能: 类似于java方法，将一组逻辑语句封装在方法体外,对外暴露方法名
+*  好处：1、隐藏了实现细节 2、提高代码重用姓
+*
+*   调用： select 函数名（实参列表） from 表；
+*   特点：
+*    1⃣️叫什么（函数名）
+*    2⃣️干什么(函数功能）
+*   p44 分类：
+*   1、单行函数
+*     如concat,length,ifNull等(字符函数,数字函数，日期函数，流程控制函数，其他函数)
+*   2、 分组函数
+*   功能: 做统计使用,又称为统计函数、聚合函数、组函数
+*   常见函数：
+*		一、单行函数
+*		字符函数：
+*		length:获取字节个数(utf-8一个汉字代表3个字节,gbk为2个字节)
+*		concat
+*		substr
+*		instr
+*		trim
+*		upper
+*		lower
+*		lpad
+*		rpad
+*		replace
+		
+*		数学函数：
+*		round
+*		ceil
+*		floor
+*		truncate
+*		mod
+		
+*		日期函数：
+*		now
+*		curdate
+*		curtime
+*		year
+*		month
+*		monthname
+*		day
+*		hour
+*		minute
+*		second
+*		str_to_date
+*		date_format
+*		其他函数：
+*		version
+*		database
+*		user
+*		控制函数
+*		if
+*		case
+*
+* 4、count(*) 一般用作统计行数
+* p57 MYSQL基础和_分组函数使用其他注意事项
+* 5、和分组函数一同查询的字段要求是group by后的字段
+* 6、和分组函数一同查询的字段有限制
+*
+*/
+
+
+/**
+*  p45 MYSQL 基础-字符函数1 
+*
+
+
+# 1.length获取数值的字符个数,utf81个汉字等于3个字符,gbk1个汉字等于2个字符
+SELECT LENGTH("john");
+SELECT LENGTH("张三丰john");
+
+# 2.显示数据库字符集
+SHOW VARIABLES LIKE '%CHAR%';
+
+# 3. concat拼接字符串
+SELECT CONCAT(last_name,',',first_name) 姓名 FROM employees;
+
+# 4.upper,lower
+SELECT UPPER("john"),LOWER("JOngh");
+
+# 案例 将性变大写，名变小写,然后拼接
+SELECT CONCAT(UPPER(last_name),LOWER(first_name)) "姓名" FROM employees;
+
+# 5.substr,subString 注意 索引从1开始 截取从指定索引处后面所有字符
+SELECT SUBSTR("李莫愁爱上了陆展元",7);
+
+# 6.截取从指定索引处指定字符长度的字符
+SELECT SUBSTR("李莫愁爱上了陆展元",1,3);
+
+# 案例 姓名中首字母大写，其他字符小写,然后用_拼接,显示出来
+SELECT CONCAT(SUBSTR(UPPER(last_name),1,1),'_',LOWER(last_name)) FROM employees;
+
+#7.insert
+SELECT INSTR("杨不悔爱上殷大侠","殷大侠");
+
+#8.trim
+SELECT LENGTH(TRIM("   张翠山   "));
+SELECT TRIM('a' FROM  'aaaaaaa张翠山');
+
+#9.lpad 用指定字符实现左填充指定长度
+SELECT LPAD("asasas",10,"张三丰");
+
+
+#10.rpad 用指定字符实现左填充指定长度
+SELECT RPAD("asasas",10,"张三丰");
+
+#replace替换
+SELECT REPLACE("张无忌喜欢上了周芷若",'周芷若','赵敏');
+
+
+#p46 MYSQL数字函数
+
+# round 四舍五入
+SELECT ROUND(-1.44);
+SELECT ROUND(1.55);
+
+
+#1.ceil 向上取整,返回>=该参数的最小参数
+SELECT CEIL(1.00);
+
+#2. floor 向下取整,返回<=该参数最大整数
+SELECT FLOOR(-9.99);
+
+#3.truncate 裁断
+SELECT TRUNCATE(1.688,1);
+
+#4.mod取余
+SELECT MOD(10,-3);
+SELECT 10%3;
+
+
+#47 MYSQL日期函数
+# now 返回当前日期+时间
+SELECT NOW();
+
+# curdate 返回当前系统日期,不包含时间
+SELECT CURDATE();
+
+# curtime 返回当前时间，不包括时间
+SELECT CURTIME();
+
+# 获取指定年、月、日、小时、分钟、秒
+SELECT YEAR(NOW());
+SELECT YEAR('2019-01-20');
+
+SELECT YEAR(hiredate) 年 FROM employees;
+
+SELECT MONTH(NOW()) 月;
+
+#转成英文的天数
+SELECT MONTHNAME(NOW()) 月;
+
+# str_to_date 将日期格式的字符转换成指定格式的日期
+SELECT STR_TO_DATE('9-13-1999','%m-%d-%Y');
+
+
+# data_format: 将日期转换成字符
+SELECT DATE_FORMAT('2020/9/2','%Y年%m月%d日');
+
+# 查询入职日期为1992-4-3入职日期
+SELECT * FROM employees WHERE hiredate=STR_TO_DATE("4-3 1992","%c-%d %Y");
+
+#data_format: 将日期转换成字符
+SELECT DATE_FORMAT(NOW(),'%Y年%m月%d日');
+
+
+#查询有奖金的员工名和入职日期(xx月xx日 xx年)
+SELECT last_name,hiredate,DATE_FORMAT(hiredate,'%c月%d日 %y年') 入职日期 FROM employees WHERE commission_pct IS NOT NULL;
+
+#p48 MYSQL基础_其他函数
+SELECT VERSION();
+SELECT DATABASE();
+SELECT USER();
+
+#49 流程控制函数
+#1、if函数: if else 的效果
+SELECT IF(10<5,'大','小');
+
+SELECT last_name,commission_pct,IF(commission_pct is NULL,"没奖金,哈哈哈","有奖金,嘻嘻嘻") 备注 FROM employees;
+
+
+#2.case函数使用
+
+/**
+*  mysql中
+*  case 要判断的字段或表达式
+*  when 常量1 then 要显示的值或语句1
+*  when 常量2 then 要显示的值或语句2
+* else 要显示的值n或语句n
+*  end
+*/
+
+
+/**
+*   案例: 查询员工的工资,要求
+*   部门号=30,显示的工资为1.1倍
+*   部分号=40,显示的工资为1.2倍
+*   部分号=50,显示的工资为1.3倍
+*   其他部门为原来工资 
+*/
+
+SELECT salary 原始工资,department_id,
+CASE department_id
+	WHEN 30 THEN salary*1.1
+	WHEN 40 THEN salary*1.2
+	WHEN 50 THEN salary*1.3
+ELSE salary
+END 新工资 FROM employees;
+
+
+/**
+*  mysql中
+*  case 函数使用: 类似于多重if
+*  when 条件1 then 要显示的值或语句1;
+*  when 条件2 then 要显示的值或语句2;
+* else 要显示的值n或语句n;
+*  end
+*/
+
+
+
+/**
+*   案例 查询员工工资情况
+*   如果工资>20000,显示A级别
+*   如果工资>15000,显示B级别
+*   如果工资>10000,显示C级别
+*   否则显示D
+*/
+SELECT salary,
+CASE 
+	WHEN salary>20000 THEN 'A'
+	WHEN salary>15000 THEN 'B'
+	WHEN salary>10000 THEN 'C'
+	ELSE 'D'
+END 工资级别 FROM employees;
+
+/*
+*  p52测试案例
+*/
+
+#1. 显示系统时间(注：日期+时间)
+SELECT NOW();
+
+#2.查询员工号，姓名，工资，以及工资提高百分之 20%后的结果（new salary）
+SELECT employee_id 员工号,last_name 姓名,salary 工资,salary*1.2 提高后的工资 FROM employees;
+
+
+#3
+SELECT last_name "Last_name",job_id "Job_id",
+CASE job_id
+WHEN 'AD_PRES' THEN 'A'
+WHEN 'ST_MAN' THEN 'B'
+WHEN 'IT_PROG' THEN 'C'
+WHEN 'SA_REP' THEN 'D'
+WHEN 'ST_CLERK' THEN 'E'
+ELSE 'G'
+END "Grade" FROM employees;
+
+/**
+*   p53 MYSQL基础_分组函数介绍
+*   功能： 用于统计作用,又称为聚合函数或统计函数或组函数
+*   分类:
+*    sum求和 avg平均值 max最大值 min最小值 count计算个数
+*    特点:
+*      1、sum,avg一般用于处理数值类型
+*       max,min,count可以处理任何类型
+*      2、是否忽略null值
+*       以上分组函数都忽略null值
+*     3、可以和distinct搭配实现去重操作
+*  
+*/
+
+#1.简单实用
+SELECT SUM(salary) FROM employees;
+SELECT AVG(salary) FROM employees;
+SELECT MAX(salary) FROM employees;
+SELECT MIN(salary) FROM employees;
+SELECT COUNT(salary)FROM employees;
+
+#连起来操作
+SELECT SUM(salary) 和, AVG(salary) 平均值,MAX(salary)最大值,MIN(salary) 最小值,COUNT(salary) 个数 FROM employees;
+
+#支持哪种类型
+SELECT MAX(last_name),MIN(last_name) FROM employees;
+SELECT last_name FROM employees;
+
+#是否忽略null
+SELECT SUM(commission_pct) 和, AVG(commission_pct) 平均值,MAX(commission_pct)最大值,MIN(commission_pct) 最小值,COUNT(commission_pct) 个数 FROM employees;
+
+
+#p55 和distinct搭配使用
+SELECT SUM(DISTINCT salary),SUM(salary) FROM employees;
+SELECT COUNT(DISTINCT salary),COUNT(salary) FROM employees;
+
+#56 MYSQL基础_count函数具体介绍 统计不为null值
+SELECT COUNT(salary) FROM employees;
+
+
+/*
+*     MYISM 存储引擎下，  COUNT(*)效率高, COUNT(*)有计算器
+*     INDDOB 存储引擎下，  COUNT(*)和COUNT(1)效率差不多, 比COUNT(字段)效率要高一些
+*    
+*/
+
+SELECT COUNT(*) FROM employees;
+SELECT COUNT(1) FROM employees;
+
+
+
+
+/*
+* 测试案例  
+*/
+
+# 查询各 job_id 的员工工资的最大值，最小值，平均值，总和，并按 job_id 升序
+SELECT SUM(commission_pct) 总和, AVG(commission_pct) 平均值,MAX(commission_pct)最大值,MIN(commission_pct) 最小值,COUNT(commission_pct) 个数 FROM employees ORDER BY job_id ASC;
+
+
+#2.查询员工最高工资和最低工资的差距（DIFFERENCE）
+SELECT MAX(salary)-MIN(salary) DIFFERENCE FROM employees;
+
+#3.查询各个管理者手下员工的最低工资，其中最低工资不能低于6000，没有管理者的员工不计算在内
+SELECT MIN(salary),department_id FROM employees WHERE department_id IS NOT NULL GROUP BY department_id HAVING MIN(salary)> 6000;
+
+#查询所有部门的编号，员工数量和平均工资，并按照平均工资降序
+SELECT department_id '部门编号',COUNT(*) '员工数量',ROUND(AVG(salary),2) '平均工资' FROM employees GROUP BY 部门编号 ORDER BY 平均工资 DESC;
+
+#选择具有各个job_id的员工人数
+SELECT COUNT(*),job_id FROM employees GROUP BY job_id;
+
+/*
+* MYSQL基础 分组查询所有
+* 分组查询 group by将表中的表哥分为若干份
+* 出现每个就是分组,先分组后排序
+*  WHERE一定放在FROM后面
+*/
+
+#引入查询每个部门的平均工资
+SELECT AVG(salary) FROM employees GROUP BY department_id;
+
+
+
+/*
+* p60 进阶5 分组查询
+*  语法
+*    SELECT 分组函数，列(要求出在group by后面)
+*    FROM 表
+*   WHERE 筛选条件
+*   group by 分组列表
+*   order by 子句
+* 
+*/
+
+#案例 查询每个工种出现的最高工资
+SELECT MAX(salary) 最高工资,job_id FROM employees GROUP BY job_id;
+
+#查询每个位置上的部门个数
+SELECT COUNT(*),location_id FROM departments GROUP BY location_id;
