@@ -1,0 +1,658 @@
+# 82 外连接:
+语法：
+    select 查询列表
+    from 表1 别名
+    left|right|full【outer】 join 表2 别名 on 连接条件
+    where 筛选条件
+    group by 分组列表
+    having 分组后的筛选
+    order by 排序列表
+    limit 子句;
+应用场景: 用于查询一个表中有,一个表中没有的情形
+
+特点： 1、外连接的查询结果为主表中的所有记录
+         如果从表中有和它匹配的,则显示匹配值
+         如果从表中没有和它匹配的，则显示null值;
+         外连接查询结果 = 内连接的结果+主表中有而从表中没有的记录、
+      2、左外连接,left  join 左边的是主表   
+         右外连接,right  join 右边的是主表     
+      3、 左外和右外交换两个表的顺序,可以实现通用
+      4、 全外连接 = 内连接 + 表1中有但表2中没有的+   表2中有但表1中没有的
+
+查询哪个就以哪个为主表就可以,比如,我查询编号>3的女神的男朋友,我们先查询女神,所以以女朋友为主表
+
+
+
+# 引入: 查询男朋友不在男神表的女神名
+左外
+SELECT  b.name,bo.* FROM beauty b LEFT OUTER JOIN boys bo ON b.boyfriend_id =  bo.id WHERE bo.id IS NULL;
+右外
+SELECT  b.name,bo.* FROM boys bo RIGHT OUTER JOIN beauty b ON b.boyfriend_id =  bo.id WHERE bo.id IS NULL;
+
+
+#案例1: 查询哪个部门没有员工
+左外
+SELECT  d.*,employee_id FROM departments d LEFT JOIN employees e ON d.department_id = e.department_id WHERE employee_id IS NULL;      
+右边
+SELECT d.*,e.employee_id FROM employees e RIGHT OUTER JOIN departments d ON d.`department_id`=e.`department_id` WHERE e.`employee_id` IS NULL;
+
+# 全外 full join
+SELECT b.*,bo.* FROM beauty b FULL JOIN boys bo ON b.boyfriend_id = bo.id;
+
+# 交叉连接
+    - 语法：
+    select 查询列表
+    from 表1 别名
+    cross join 表2 别名;
+    - 特点：
+    类似于笛卡尔乘积
+
+
+SELECT b.*,bo.* FROM beauty b CROSS JOIN boys bo;
+
+
+#sql92和 sql99pk
+/*
+功能：sql99支持的较多
+可读性：sql99实现连接条件和筛选条件的分离，可读性较高
+*/
+
+
+#一、查询编号>3的女神的男朋友的信息，如果有则列出详细，如果没有，用null填充
+SELECT b.id,b.name,bo.* FROM beauty b  LEFT JOIN boys bo ON b.boyfriend_id = bo.id WHERE b.id > 3;
+
+
+#二、查询哪个城市没有部门
+SELECT city FROM departments   d RIGHT JOIN locations l on l.location_id = d.location_id WHERE d.department_id IS NULL;
+
+SELECT city,department_name FROM locations l LEFT OUTER JOIN departments d ON l.location_id=d.location_id WHERE d.department_id IS NULL;
+
+#三、查询部门名为SAL或IT的员工信息
+SELECT department_name,e.*  FROM departments d  LEFT JOIN employees e ON e.department_id = d.department_id WHERE d.department_name IN('SAL','IT');
+
+
+# 87-94 进阶7：子查询
+7.1 基本概念
+含义：
+
+出现在其他语句中的select语句，称为子查询或内查询
+
+外部的查询语句，称为主查询或外查询
+
+分类：
+
+按子查询出现的位置：
+
+​ select后面：
+
+​ 仅仅支持标量子查询
+
+​
+
+​ from后面：
+
+​ 支持表子查询
+
+​ where或having后面：★
+
+​ 标量子查询（单行） √
+
+​ 列子查询 （多行） √
+
+​ 行子查询
+
+​ exists后面（相关子查询）
+
+​ 表子查询
+
+按结果集的行列数不同：
+
+​ 标量子查询（结果集只有一行一列）
+
+​ 列子查询（结果集只有一列多行）
+
+​ 行子查询（结果集有一行多列）
+
+​ 表子查询（结果集一般为多行多列）
+
+7.2 where或having后面
+1、标量子查询（单行子查询）
+
+2、列子查询（多行子查询）
+
+列子查询，一般搭配着多行操作符使用
+
+in、any/some、all
+
+3、行子查询（多列多行）
+
+特点：
+
+①子查询放在小括号内
+
+②子查询一般放在条件的右侧
+
+③标量子查询，一般搭配着单行操作符使用
+
+> < >= <= = <>
+
+④子查询的执行优先于主查询执行，主查询的条件用到了子查询的结果
+
+
+
+#1、标量子查询
+
+#案例1：谁的工资比Abel高
+1） 查询Abel的工资
+SELECT salary '工资' FROM employees WHERE last_name = "Abel";
+
+2) 查询员工的信息,满足salary > 1⃣️的结果
+SELECT * FROM employees WHERE salary > (SELECT salary '工资' FROM employees WHERE last_name = "Abel");
+
+#案例2：返回job_id与141号员工相同，salary比143号员工多的员工姓名，和工资
+1) 查询141号的job_id
+SELECT job_id FROM employees WHERE employee_id = 141;
+
+2) 查询143号员工的salary
+SELECT salary FROM employees WHERE employee_id = 143;
+
+3) 查询员工姓名、job_id和工资,要求job_id = 1⃣️并且salary>2⃣️
+SELECT last_name "员工姓名",job_id "工种编号",salary "工资" FROM employees WHERE job_id =  (SELECT job_id FROM employees WHERE employee_id = 141) AND
+salary > (SELECT salary FROM employees WHERE employee_id = 143);
+
+
+#案例3：返回公司工资最少的员工的last_name,job_id和salary
+SELECT last_name "员工姓名",job_id "工种编号",salary "工资" FROM employees WHERE salary = (SELECT MIN(salary) FROM employees);
+
+#案例4：查询最低工资大于50号部门最低工资的部门id和其最低工资
+
+1) 查询50号部门最低工资
+SELECT MIN(salary) "最低工资" FROM employees WHERE department_id = 50;
+
+2) 查询每个部门的最低工资
+SELECT MIN(salary) "每个部门最低工资" FROM employees GROUP BY department_id;
+
+
+3) 筛选2⃣️,满足min(salary) > 1⃣️
+SELECT department_id "部门编号",MIN(salary) "最低工资的部门" FROM employees GROUP BY department_id HAVING MIN(salary)>(
+SELECT MIN(salary) "最低工资" FROM employees WHERE department_id=50);
+
+
+4、子查询的执行优先于主查询的执行
+
+#非法使用标量子查询
+tip:1>、<只能搭配标量子查询
+2查询结果必须时一行一列
+
+
+# 86 2.列子查询(多行子查询)
+
+. 返回多行
+. 使用多行比较操作符
+
+操作符       含义
+IN/NOT IN   等于列表中的任意一个
+ANY|SOME    和子查询返回的某一个值比较
+ALL         和子查询返回的所有值比较 
+
+
+#案例1：返回location_id是1400或1700的部门中的所有员工姓名
+
+#思路一：可以连表
+SELECT last_name,d.department_id,l.location_id  FROM employees e INNER JOIN departments d 
+ON e.department_id = d.department_id
+INNER JOIN locations l ON d.location_id = l.location_id WHERE l.location_id IN(1400,1700);
+
+1）查询location_id是1400或1700的部门编号
+SELECT  department_id "部门编号" FROM departments WHERE location_id  IN(1400,1700);
+
+2）查询员工姓名，要求部门编号1是列表中的某一个
+SELECT last_name "员工姓名" FROM employees WHERE department_id <> ALL(SELECT  DISTINCT department_id "部门编号" FROM departments WHERE location_id  IN(1400,1700));
+
+
+#案例2：返回其它工种中比job_id为‘IT_PROG’工种任一工资低的员工的员工号、姓名、job_id 以及salary
+
+
+1）查询job_id为‘IT_PROG’部门工种任一工资
+SELECT salary "工资" FROM employees WHERE job_id = "IT_PROG";
+
+
+2）查询员工的员工号、姓名、job_id 以及salary并且 salary < 1⃣️
+SELECT employee_id "员工号",last_name "姓名", job_id "工种编号" FROM employees WHERE salary < ANY(SELECT salary "工资" FROM employees WHERE job_id = "IT_PROG") AND job_id<>'IT_PROG';
+
+
+或
+SELECT last_name,employee_id,job_id,salary FROM employees WHERE salary<(
+SELECT MAX(salary) FROM employees WHERE job_id='IT_PROG') AND job_id<> 'IT_PROG';
+
+
+#案例3 返回其他工种中比job_id为‘IT_PROG’工种所有工资低的员工的员工号、姓名、job_id以及salary 
+SELECT employee_id "员工号",last_name "姓名", job_id "工种编号" FROM employees WHERE salary < ALL(SELECT salary "工资" FROM employees WHERE job_id = "IT_PROG") AND job_id<>'IT_PROG';
+
+或
+SELECT last_name,employee_id,job_id,salary FROM employees WHERE salary<(
+SELECT MIN(salary) FROM employees WHERE job_id='IT_PROG') AND job_id<> 'IT_PROG';
+
+
+说明:
+not in  =<> all
+in = any
+小于任一(ANY)即小于最大的
+
+
+
+#90   3行字查询（结果集一行多列或多行多列） 使用较少
+#案例：查询员工编号最小并且工资最高的员工信息
+
+1）查询最小员工编号
+SELECT MIN(employee_id) "最小员工编号" FROM employees;
+
+2) 查询最高工资
+SELECT MAX(salary) "最高工资" FROM employees;
+
+3 查询员工信息
+
+1）方式一：标量子查询
+SELECT * FROM employees WHERE employee_id = (SELECT MIN(employee_id) "最小员工编号" FROM employees) AND salary = (SELECT MAX(salary) "最高工资" FROM employees);
+
+2）方式二: 行子查询
+SELECT * FROM employees WHERE (employee_id,salary) = (SELECT MIN(employee_id),MAX(salary) FROM employees);
+
+
+# p91 MYSQL_select后面的子查询使用
+
+#二、select后面
+/*
+仅仅支持标量子查询
+*/
+
+#案例：查询每个部门的员工个数
+SELECT d.*,(SELECT COUNT(*) FROM employees e WHERE e.department_id = d.department_id) "个数" FROM departments d;
+
+#案例2：查询员工号=102的部门名
+
+#标量子查询
+1)SELECT department_id,department_name FROM departments d WHERE department_id = (SELECT department_id FROM employees WHERE employee_id = 102);
+
+#内连接
+2)SELECT department_name FROM employees e INNER JOIN departments d ON e.department_id = d.department_id WHERE employee_id = 102;
+
+
+# p92 MYSQL_form后面的子查询使用
+#三、from后面
+/*
+将子查询结果充当一张表，要求必须起别名
+*/
+
+#案例：查询每个部门的平均工资的工资等级
+#①查询每个部门的平均工资
+SELECT AVG(salary) "平均工资",department_id "部门编号" FROM employees GROUP BY department_id;
+
+#②连接①的结果集和job_grades表，筛选条件平均工资 between lowest_sal and highest_sal
+SELECT ag_dep.*,g.grade_level FROM (
+SELECT AVG(salary) ag,department_id FROM employees GROUP BY department_id) ag_dep
+INNER JOIN job_grades g ON ag_dep.ag BETWEEN lowest_sal AND lowest_sal;
+
+# p93 MYSQL_exist后面的子查询使用
+
+#四、exists后面（相关子查询）
+/*
+语法：
+		exists(完整的查询语句)
+结果：
+		1或0
+*/
+SELECT EXISTS (SELECT employee_id FROM employees);
+
+
+#案例1：查询有员工的部门名
+#in
+SELECT department_name FROM departments d WHERE d.department_id  IN (SELECT department_id FROM employees);
+
+#exists
+SELECT department_name FROM departments d WHERE EXISTS (SELECT * FROM employees e  WHERE e.department_id = d.department_id);
+
+
+#案例2：查询没有女朋友的男神信息
+
+#in
+SELECT bo.* FROM boys bo WHERE bo.id NOT IN (SELECT boyfriend_id FROM beauty);
+
+#exist
+SELECT bo.* FROM boys bo   WHERE NOT EXISTS(SELECT boyfriend_id FROM beauty b WHERE bo.id = b.boyfriend_id);
+
+
+#  94 MYSQL基础_案例讲解
+
+#1.	查询和Zlotkey相同部门的员工姓名和工资
+
+1）查询Zlotkey的部门
+SELECT department_id FROM employees WHERE last_name="Zlotkey";
+
+2） 查询部门= 1⃣️的姓名和工资
+SELECT last_name,salary FROM employees WHERE department_id = (SELECT department_id FROM employees WHERE last_name="Zlotkey");
+
+
+#2.查询工资比公司平均工资高的员工的员工号，姓名和工资。
+
+1)查询平均工资 
+SELECT AVG(salary) "平均工资" FROM employees;
+
+2)查询工资>1⃣️的员工号,姓名和工资
+SELECT employee_id "员工号",last_name "姓名",salary "工资" FROM employees WHERE salary > (SELECT AVG(salary) "平均工资" FROM employees);
+
+
+#3.查询各部门中工资比本部门平均工资高的员工的员工号, 姓名和工资
+1)查询各部门平均工资
+SELECT AVG(salary) "平均工资",department_id FROM employees  GROUP BY department_id;
+
+2)②连接①结果集和employees表，进行筛选
+SELECT employee_id "员工号",last_name "姓名",salary "工资",e.department_id "部门编号" FROM employees e INNER JOIN (
+SELECT AVG(salary) ag,department_id FROM employees GROUP BY department_id) ag_dep ON e.department_id=ag_dep.department_id WHERE salary> ag_dep.ag;
+
+#4.	查询和姓名中包含字母u的员工在相同部门的员工的员工号和姓名
+
+1) 查询姓名中包含字母u的部门
+SELECT DISTINCT department_id FROM employees WHERE last_name LIKE '%u%';
+
+2）查询部门号=1⃣️中任意一个员工号和姓名
+SELECT last_name,employee_id FROM employees WHERE department_id IN (SELECT DISTINCT department_id FROM employees WHERE last_name LIKE '%u%');
+
+
+#5. 查询在部门的location_id为1700的部门工作的员工的员工号
+
+1)查询location_id为1700的部门
+SELECT DISTINCT department_id FROM departments WHERE location_id = 1700;
+
+2）查询部门号=1⃣️中的任意一个员工号
+SELECT employee_id FROM employees WHERE department_id = ANY(SELECT DISTINCT department_id FROM departments WHERE location_id = 1700);
+
+
+
+#6.查询管理者是King的员工姓名和工资
+
+1)查询管理者是King的员工编号
+SELECT employee_id FROM employees WHERE last_name = 'K_ing';
+
+
+2）查询哪个员工的manager_id = 1⃣️
+SELECT last_name,salary FROM employees WHERE manager_id IN (SELECT employee_id FROM employees WHERE last_name = 'K_ing');
+
+
+#7.查询工资最高的员工的姓名，要求first_name和last_name显示为一列，列名为 姓.名
+1)查询最高工资
+SELECT MAX(salary) FROM employees;
+
+2)查询工资=1⃣️姓.名
+SELECT CONCAT(first_name,last_name) "姓.名" FROM employees WHERE salary = (SELECT MAX(salary) FROM employees);
+
+
+【SQL查询系列】子查询经典案例
+
+#1. 查询工资最低的员工信息: last_name, salary
+1)查询最低的工资
+SELECT MIN(salary) FROM employees;
+
+2）查询工资=1⃣️的last_name,salary
+SELECT last_name,salary FROM employees WHERE salary = (SELECT MIN(salary) FROM employees);
+
+
+#2.查询平均工资最低的部门信息
+#方式一
+1)各部门的平均工资
+SELECT AVG(salary),department_id FROM employees GROUP BY department_id;
+
+2）2⃣️查询1⃣️的最低平均工资
+SELECT MIN(ag) FROM  (SELECT AVG(salary) ag,department_id FROM employees GROUP BY department_id) ag_dep;
+
+
+3) 查询哪个部门的平均工资= 2⃣️
+SELECT AVG(salary),department_id FROM employees GROUP BY department_id HAVING AVG(salary)=(
+SELECT MIN(ag) FROM (SELECT AVG(salary) ag,department_id FROM employees GROUP BY department_id) ag_dep);
+
+
+4)查询部门信息
+SELECT d.* FROM departments d WHERE d.`department_id`=(
+SELECT department_id FROM employees GROUP BY department_id HAVING AVG(salary)=(
+SELECT MIN(ag) FROM (
+SELECT AVG(salary) ag,department_id FROM employees GROUP BY department_id) ag_dep));
+
+
+
+#方式二：
+#①各部门的平均工资
+SELECT AVG(salary),department_id FROM employees GROUP BY department_id;
+
+#②求出最低平均工资的部门编号
+SELECT department_id FROM employees GROUP BY department_id ORDER BY AVG(salary) LIMIT 1;
+
+#③查询部门信息
+SELECT*FROM departments WHERE department_id=(
+SELECT department_id FROM employees GROUP BY department_id ORDER BY AVG(salary) LIMIT 1);
+
+
+
+# 3.查询平均工资最低的部门信息和该部门的平均工资
+
+1)各部门平均工资
+SELECT AVG(salary),department_id FROM employees GROUP BY department_id;
+
+2）求出最低平均工资的部门编号
+SELECT AVG(salary),department_id FROM employees GROUP BY department_id  ORDER BY AVG(salary) LIMIT 1;
+
+3）查询部门信息
+SELECT d.*,ag FROM departments d INNER JOIN (
+SELECT AVG(salary) ag,department_id FROM employees GROUP BY department_id ORDER BY AVG(salary) LIMIT 1) ag_dep WHERE d.department_id=ag_dep.department_id;
+
+
+# 4.查询平均工资最高的 job 信息
+
+1)查询最高job平均工资
+SELECT AVG(salary) FROM employees GROUP BY job_id ORDER BY AVG(salary) DESC LIMIT 1;
+
+2)查询job信息
+SELECT * FROM jobs WHERE job_id = (SELECT job_id FROM employees GROUP BY job_id ORDER BY AVG(salary) DESC LIMIT 1);
+
+
+# 5. 查询平均工资高于公司平均工资的部门有哪些?
+1)查询平均工资
+SELECT AVG(salary) FROM employees;
+
+2）查询平均工资的部门
+SELECT AVG(salary),department_id FROM employees GROUP BY department_id;
+
+3）③筛选②结果集，满足平均工资>①
+SELECT AVG(salary),department_id FROM employees GROUP BY department_id HAVING AVG(salary) > (SELECT AVG(salary) FROM employees);
+
+
+# 6.查询出公司中所有 manager 的详细信息
+1) 查询公司中所有manager
+SELECT DISTINCT manager_id FROM employees;
+
+
+2）查询详细信息,满足employee_id
+SELECT * FROM employees WHERE employee_id = ANY(SELECT DISTINCT manager_id FROM employees);
+
+
+# 7. 各个部门中 最高工资中最低的那个部门的 最低工资是多少
+
+1)查询各部门的最高工资中最低的部门编号
+SELECT department_id FROM employees GROUP BY department_id ORDER BY MAX(salary) LIMIT 1;
+
+2）查询1⃣️结果的那个部门的最低工资
+SELECT MIN(salary),department_id FROM employees WHERE department_id = (SELECT department_id FROM employees GROUP BY department_id ORDER BY MAX(salary) LIMIT 1);
+
+
+#8. 查询平均工资最高的部门的 manager 的详细信息: last_name, department_id, email, salary
+
+1) 查询平均工资最高的部门编号
+SELECT AVG(salary) FROM employees GROUP BY department_id ORDER BY MAX(salary) DESC LIMIT 1;
+
+2）将employees和departments连接查询，筛选条件是①
+SELECT last_name,d.department_id,email,salary FROM employees e INNER JOIN departments d ON d.manager_id=e.employee_id WHERE d.department_id=(
+SELECT department_id FROM employees GROUP BY department_id ORDER BY MAX(salary) DESC LIMIT 1);
+
+
+/**
+*  student数据库
+* 查询练习
+*/
+
+#一、查询每个专业的学生人数 SELECT majorid,COUNT(*)
+SELECT majorid,COUNT(*) FROM student GROUP BY majorid
+
+
+#二、查询参加考试的学生中，每个学生的平均分、最高分
+SELECT AVG(score),MAX(score),studentno FROM result GROUP BY studentno;
+
+#三、查询姓张的每个学生的最低分大于60的学号、姓名
+SELECT s.studentno,s.`studentname`,MIN(score) FROM student s JOIN result r ON s.`studentno`=r.`studentno` WHERE s.`studentname` LIKE '张%' GROUP BY s.`studentno` HAVING MIN(score)> 60;
+
+#四、查询每个专业生日在“1988-1-1”后的学生姓名、专业名称
+SELECT m.majorname,s.studentname FROM student s JOIN  major m ON s.majorid. = m.majorid WHERE DATEDIFF(borndate,'1988-1-1')>0 GROUP BY m.majorid;
+
+
+#五、查询每个专业的男生人数和女生人数分别是多少
+SELECT COUNT(*),sex,majorid FROM student GROUP BY sex,majorid;
+
+#六、查询专业和张翠山一样的学生的最低分
+#①查询张翠山的专业编号
+SELECT majorid
+FROM student
+WHERE studentname = '张翠山';
+
+#②查询编号=①的所有学生编号
+SELECT studentno FROM student WHERE majorid=(
+SELECT majorid FROM student WHERE studentname='张翠山');
+
+#②查询最低分
+SELECT MIN(score) FROM result WHERE studentno IN (
+SELECT studentno FROM student WHERE majorid=(
+SELECT majorid FROM student WHERE studentname='张翠山'));
+
+#七、查询大于60分的学生的姓名、密码、专业名
+SELECT studentname,loginpwd,majorname FROM student s JOIN major m ON s.majorid=m.majorid JOIN result r ON s.studentno=r.studentno WHERE r.score> 60;
+
+#八、按邮箱位数分组，查询每组的学生个数
+SELECT COUNT(*),LENGTH(email) FROM student GROUP BY LENGTH(email);
+
+#九、查询学生名、专业名、分数
+SELECT studentname,score,majorname FROM student s JOIN major m ON s.majorid=m.majorid LEFT JOIN result r ON s.studentno=r.studentno;
+
+#查询哪个专业没有学生，分别用左连接和右连接实现
+#左
+SELECT m.`majorid`,m.`majorname`,s.`studentno` FROM major m LEFT JOIN student s ON m.`majorid`=s.`majorid` WHERE s.`studentno` IS NULL;
+#右
+SELECT m.`majorid`,m.`majorname`,s.`studentno` FROM student s RIGHT JOIN major m ON m.`majorid`=s.`majorid` WHERE s.`studentno` IS NULL;
+
+十一、查询没有成绩的学生人数
+SELECT COUNT(*) FROM student s LEFT JOIN result r ON s.`studentno`=r.`studentno` WHERE r.`id` IS NULL;
+
+
+#95 MYSQL基础_分页查询
+进阶8：分页查询 Limit
+8.1 基本概念
+应用场景：当要显示的数据，一页显示不全，需要分页提交sql请求
+
+语法：
+
+​ select 查询列表
+
+​ from 表
+
+​ 【join type】 join 表2
+
+​ on 连接条件
+
+​ where 筛选条件
+
+​ group by 分组字段
+
+​ having 分组后的筛选
+
+​ order by 排序的字段】
+
+​ limit 【offset,】size;
+
+两个值：
+
+​ offset要显示条目的起始索引（起始索引从0开始）
+
+​ size 要显示的条目个数
+
+特点：
+
+​ ①limit语句放在查询语句的最后
+
+​ ②公式
+
+​ 要显示的页数 page，每页的条目数size
+
+​ select 查询列表
+
+​ from 表
+
+​ limit (page-1)*size,size;
+
+​ size=10
+
+​ page
+
+​ 1 0
+
+​ 2 10
+
+​ 3 20
+
+*/
+
+#案例1：查询前五条员工信息
+SELECT * FROM employees LIMIT 0,5;
+SELECT * FROM employees LIMIT 5;
+
+#案例2：查询第11条——第25条
+SELECT * FROM employees LIMIT 10,15;
+
+#案例3：有奖金的员工信息，并且工资较高的前10名显示出来
+SELECT * FROM employees  WHERE commission_pct IS NOT null ORDER BY salary DESC LIMIT 10;
+
+# p100-101 MYSQL_联合查询的特点
+进阶9：联合查询 /
+9.1 基本概念
+union 联合 合并：将多条查询语句的结果合并成一个结果
+
+语法：
+
+查询语句1
+
+union
+
+查询语句2
+
+union
+
+…
+
+应用场景：
+
+要查询的结果来自于多个表，且多个表没有直接的连接关系，但查询的信息一致时
+
+特点：★
+
+1、要求多条查询语句的查询列数是一致的！
+
+2、要求多条查询语句的查询的每一列的类型和顺序最好一致 （避免在含义上弄混）
+
+3、union关键字默认去重，如果使用union all 可以包含重复项
+
+
+#引入的案例：查询部门编号>90或邮箱包含a的员工信息
+SELECT * FROM employees WHERE department_id  > 90 OR email LIKE '%a%';
+
+SELECT * FROM employees WHERE department_id  > 90 UNION SELECT * FROM employees WHERE email LIKE '%a%';
+
+
+#案例：查询中国用户中男性的信息以及外国用户中年男性的用户信息
+SELECT id,cname FROM t_ca WHERE csex='男'
+UNION ALL
+SELECT t_id,t_Name FROM t_ua WHERE tGender='male';
