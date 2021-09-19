@@ -12,7 +12,7 @@ import java.util.ResourceBundle;
  * @version 1.0
  * @ClassName JdbcTest3
  * @company 公司
- * @Description 从属性文件中读取数据库连接信息
+ * @Description 从属性文件中读取数据库连接信息1
  * 第一步: 注册驱动 (作用:告诉Java程序,即将要连接的是哪个品牌的数据库)
  * 第二步: 获取连接 (表示JVM的进程和数据库的进程之间通道打开了,这属于进程之间通信,重要级的,使用完后一定要关闭)
  * 第三步: 获取数据库连接对象(专门执行sql语句的对象)
