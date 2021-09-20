@@ -11,11 +11,29 @@
  Target Server Version : 80026
  File Encoding         : 65001
 
- Date: 20/09/2021 20:38:23
+ Date: 20/09/2021 22:49:16
 */
 
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
+
+-- ----------------------------
+-- Table structure for act
+-- ----------------------------
+DROP TABLE IF EXISTS `act`;
+CREATE TABLE `act` (
+  `id` int NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `money` decimal(7,2) DEFAULT NULL COMMENT '钱',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- ----------------------------
+-- Records of act
+-- ----------------------------
+BEGIN;
+INSERT INTO `act` VALUES (1, 1000.00);
+INSERT INTO `act` VALUES (2, 1000.00);
+COMMIT;
 
 -- ----------------------------
 -- Table structure for student
@@ -27,7 +45,7 @@ CREATE TABLE `student` (
   `age` int DEFAULT NULL COMMENT '年龄',
   `email` varchar(255) DEFAULT NULL COMMENT '邮箱',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- ----------------------------
 -- Records of student
@@ -39,7 +57,8 @@ INSERT INTO `student` VALUES (3, '王五', 30, '199@qq.com');
 INSERT INTO `student` VALUES (4, '李鬼', 30, '117@qq.com');
 INSERT INTO `student` VALUES (5, '猫咪', 31, '112@qq.com');
 INSERT INTO `student` VALUES (7, '赵日天', 31, '112@qq.com');
-INSERT INTO `student` VALUES (8, '菊花', 31, '112@qq.com');
+INSERT INTO `student` VALUES (8, '雪花女神龙', 31, '112@qq.com');
+INSERT INTO `student` VALUES (9, '鬼见愁', 49, '123@qq.com');
 COMMIT;
 
 -- ----------------------------
